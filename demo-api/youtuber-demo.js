@@ -32,9 +32,13 @@ db.set(3, youtuber3)
 
 // 전체 유튜버 조회
 app.get('/youtubers', (req, res) => {
+
+    let youtubers = {}
     db.forEach(function(youtuber){
-        console.log(youtuber)     
+        youtubers[youtuber.channelTitle] = youtuber
     })
+
+    res.json(youtubers)
 })
 
 // 개별 유튜버 조회
@@ -63,4 +67,63 @@ app.post('/youtubers', (req, res) => {
     db.set(key, newData)
     
     res.json({message: `${newData.channelTitle}님 유튜브 채널 개설을 축하합니다!`})
+})
+
+// 개별 유튜버 삭제
+app.delete('/youtubers/:id', (req, res)=> {
+    let {id} = req.params
+    id = parseInt(id)
+
+    let data = db.get(id)
+
+    if (data === undefined){
+        res.json({message: `${id}번 유튜버 정보를 찾을 수 없습니다.`})
+    }
+    else{
+        db.delete(id)
+        res.json({message: `${data.channelTitle} 유튜브 채널이 삭제되었습니다.`})}
+})
+
+// 전체 유튜버 삭제
+app.delete('/youtubers', (req, res)=>{
+    
+    let msg =''
+
+    if(db.size > 0){
+        db.clear()
+
+        // db.forEach((a, b)=>{
+        //     db.delete(b)
+        // })
+        msg = '전체 유튜버가 삭제되었습니다.'
+   
+    }
+    else{
+        msg = '삭제할 유튜버 데이터가 없습니다'
+    }
+
+    res.json({message: msg})
+})
+
+// 개별 유튜버 수정 (채널 타이틀 수정)
+app.put('/youtubers/:id', (req, res)=>{
+
+    let {id} = req.params
+    id = parseInt(id)
+
+    let msg = ''
+    let data = db.get(id)
+    if (data === undefined){
+        meg = `${id}번 유튜버 정보를 찾을 수 없습니다.`
+    }
+    else{
+        let originTitle = data.channelTitle
+        let newTitle = req.body.channelTitle
+        data.channelTitle = newTitle
+        db.set(id, data)
+        
+        msg = `채널명이 '${originTitle}' -> '${newTitle}'로 변경되었습니다.`
+    }
+    
+    res.json({message: msg})
 })
